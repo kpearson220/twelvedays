@@ -47,13 +47,57 @@ the function takes a gift and returns the appropriate plural.
 # Return -- A string or vector of strings with the pluralized words
 
 pluralize_gift <- function(gift){
-
-gift <- gift %>%
-  str_replace()
-
+  
+  if(gift[-1] == "y") {
+    gift <- gift %>%
+    str_replace("y$", "ies")
+  }
+else {
+  gift <- gift %>%
+  str_replace("$", "s")
+  str_replace("oo", "ee")
+}
+  
 return(gift)
 
 }
+```
+
+```{r}
+pluralize_gift <- function(gift){
+
+  ifelse(gift[-1] != "y",
+          gift <- gift %>%
+          str_replace("$", "s"),
+          gift <- gift %>%
+          str_replace("y$", "ies")
+          )
+  gift <- gift %>%
+    str_replace("oo", "ee")
+  
+return(gift)
+
+}
+```
+```{r non vectorized}
+pluralize_gift <- function(gift){
+
+  if(str_detect(gift, "oo")){
+    return(str_replace(gift, "oo", "ee"))
+  }
+  if_else(gift[-1]  == "y",
+          gift <- gift %>%
+    str_replace("y$", "ie"),
+      gift <- gift %>%
+    str_replace("$", "s"))
+return(gift)
+}
+```
+
+
+```{r}
+pluralize_gift("lady")
+
 ```
 
 *Hint 1:* Note that the gifts on days six and nine have unusual pluralizations.
@@ -101,9 +145,9 @@ Write a function called `make_phrase` that takes as input the necessary informat
 and returns a phrase.  For example, 
 
 ```{r}
-make_phrase(num = 10, 
-            num_word = "ten", 
-            item = "lords", 
+make_phrase(num = 1, 
+            num_word = "one", 
+            item = "lord", 
             verb = "a-leaping", 
             adjective = "", 
             location = "")
@@ -119,26 +163,30 @@ should return
 make_phrase <- function(num, num_word, item, verb, adjective, location) {
   
   ## Step 1: Replace NAs with blank strings
+  num <- str_replace_na(num, "")
   verb <- str_replace_na(verb, "")
-  
+  num_word <- str_replace_na(num_word, "")
+  item <- str_replace_na(item, "")
+  adjective <- str_replace_na(adjective, "")
+  location <- str_replace_na(location, "")
   ## Step 2: Pluralize the gift if needed
   ## Items with numbers larger than 1 should be pluralized
   ## Single items starting with a vowel should have "an" in front
   ## All other single items should have "a" in front
   
-  vowel_start <- str_sub(item, 1, 1) %>% str_detect(___)
+  vowel_start <- str_sub(item, 1, 1) %>% str_detect("^[aeiou]")
   
-  if (___) {
+  if (num > 1) {
     
     item <- pluralize_gift(item)
     
   } else if (vowel_start) {
   
-      
+    item <- str_c("an", item, sep = " ")
     
   } else {
     
-    
+    item <- str_c("a", item, sep = " ")
     
   }
   
@@ -162,7 +210,8 @@ to create numbered days and then use those in your `pmap_chr()`!
 ```{r}
 xmas <- xmas %>%
   mutate(
-    Full.Phrase = pmap_chr(list(___), 
+    Day.in.Words = english::as.english(Day),
+    Full.Phrase = pmap_chr(list(Day, Day.in.Words, Gift.Item, Verb, Adjective, Location), 
                            make_phrase)
   )
 ```
