@@ -1,5 +1,6 @@
 ---
 title: "Lab: The 12 Days of Christmas"
+author: "Group 4"
 output:
   prettydoc::html_pretty:
     theme: tactile
@@ -26,6 +27,7 @@ our functions as we work on them.
 
 ```{r}
 xmas <- read.csv("https://www.dropbox.com/s/e584pryn8evm1gz/xmas.csv?dl=1")
+xmas_small <- filter(xmas, Day == 1 | Day == 2 )
 ```
 
 ---
