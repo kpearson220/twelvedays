@@ -79,6 +79,7 @@ return(gift)
 
 }
 ```
+
 ```{r non vectorized}
 pluralize_gift <- function(gift){
 
@@ -210,7 +211,7 @@ to create numbered days and then use those in your `pmap_chr()`!
 ```{r}
 xmas <- xmas %>%
   mutate(
-    Day.in.Words = english::as.english(Day),
+    Day.in.Words = as.character(english::as.english(Day)),
     Full.Phrase = pmap_chr(list(Day, Day.in.Words, Gift.Item, Verb, Adjective, Location), 
                            make_phrase)
   )
@@ -230,34 +231,43 @@ Write a function called `sing_line` that takes as input:
 
 * The name of a column in the dataset that contains the phrases for each day.
 
-```{r}
+```{r mine}
 # Produces the string for one day of the song.
 # Arguments -- dataset -- A data frame containing information about gifts
 # Arguments -- line -- The number of the line for the day you want to sing about
 # Arguments -- phrase_col -- The variable name for the column in the dataset that contains the gift phrases
 # Return -- A string singing the line of the song with all gifts for the given day.
 
-sing_day <- function(dataset, line, phrase_col){
+sing_line <- function(dataset, line, phrase_col){
   
   # Step 1: Setup the intro line
   
-  num_word <- ____
+  num_word <- english::ordinal(line)
   
-  intro <- glue::glue("On the {num_word} day of Christmas")
+  intro <- glue::glue("On the {num_word} day of Christmas, my true love sent to me, \n")
   
   # Step 2: Sing the gift phrases
 
     phrases <- dataset %>% 
-      pull({{phrase_col}})
-
-  ????
+      filter(Day <= line) %>%
+      pull({{phrase_col}}) %>%
+      rev()
     
+    #sing_phrases <- vector(mode = "character");
+    
+    #for (i in seq(from = line + 1, to = 1)) {
+     # sing_phrases <- str_c(phrases[i])
+    #}
+#english::ordinal()
   ## put it together
     
-  ????
+  final_phrases <- paste(phrases, collapse =" \n ")
+    glue::glue("{intro} {final_phrases}")
+  final_line <- str_c(intro, final_phrases)
+  return(final_phrases)
+  }
 
-
-}
+#for i in sequence()
 
 
 ```
@@ -266,12 +276,39 @@ For example,
 
 
 ```{r}
-sing_line(xmas, 
-          num = 2, 
+sing_line(dataset = xmas, 
+          line = 2, 
           phrase_col = Full.Phrase)
 
 ```
 
+```{r abdul}
+sing_line <- function(dataset, line, phrase_col){
+
+  # Step 1: Setup the intro line
+
+  num_word <- english::ordinal(line)
+ 
+  intro <- glue::glue("On the {num_word} day of Christmas, my true love sent to me,")
+  # Step 2: Sing the gift phrases
+
+    phrases <- dataset %>%
+      filter(Day <= line) %>% 
+      pull({{phrase_col}}) %>% 
+      rev()
+    #print(phrases[line])
+    if (str_detect(phrases[line], "one"))
+    {
+      phrases[line] <- str_replace(phrases[line], "one", "a")
+    }
+    a<- paste(phrases[1:(line-1)], collapse = ",\n")
+    b <- str_c(a, phrases[line], sep = "\nand ")
+    return (glue("{intro}\n{b}"))
+
+}
+```
+
+We learned about the paste function from <https://www.journaldev.com/40396/paste-in-r>
 should return
 
 ```
