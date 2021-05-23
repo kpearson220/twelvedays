@@ -301,7 +301,8 @@ sing_line <- function(dataset, line, phrase_col){
     {
       phrases[line] <- str_replace(phrases[line], "one", "a")
     }
-    a<- paste(phrases[1:(line-1)], collapse = ",\n")
+    a<- #map_chr(1:line, glue::glue("{phrases},\n"))
+      paste(phrases[1:(line-1)], collapse = ",\n")
     b <- str_c(a, phrases[line], sep = "\nand ")
     return (glue("{intro}\n{b}"))
 
