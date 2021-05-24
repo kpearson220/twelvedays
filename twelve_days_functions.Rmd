@@ -9,7 +9,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 
 # Packages for Functions
 library(dplyr)
@@ -41,46 +41,11 @@ on day 5 simply says "ring".
 Using the skeleton of the `pluralize_gift()` function, complete the code so that 
 the function takes a gift and returns the appropriate plural. 
 
-```{r}
+```{r non vectorized}
 # Function that takes a noun and makes it plural
 # Arguments -- gift -- A string or vector of strings
 # Return -- A string or vector of strings with the pluralized words
 
-pluralize_gift <- function(gift){
-  
-  if(gift[-1] == "y") {
-    gift <- gift %>%
-    str_replace("y$", "ies")
-  }
-else {
-  gift <- gift %>%
-  str_replace("$", "s")
-  str_replace("oo", "ee")
-}
-  
-return(gift)
-
-}
-```
-
-```{r}
-pluralize_gift <- function(gift){
-
-  ifelse(gift[-1] != "y",
-          gift <- gift %>%
-          str_replace("$", "s"),
-          gift <- gift %>%
-          str_replace("y$", "ies")
-          )
-  gift <- gift %>%
-    str_replace("oo", "ee")
-  
-return(gift)
-
-}
-```
-
-```{r non vectorized}
 pluralize_gift <- function(gift){
 
   if(str_detect(gift, "oo")){
@@ -96,9 +61,8 @@ return(gift)
 ```
 
 
-```{r}
+```{r test}
 pluralize_gift("lady")
-
 ```
 
 *Hint 1:* Note that the gifts on days six and nine have unusual pluralizations.
@@ -130,7 +94,7 @@ make things simpler!)
 
 ```{r}
 
-pluralize_gift(xmas$Gift.Item)
+#pluralize_gift(xmas$Gift.Item)
 
 purrr::map_chr(xmas$Gift.Item, pluralize_gift)
 
@@ -145,9 +109,9 @@ purrr::map_chr(xmas$Gift.Item, pluralize_gift)
 Write a function called `make_phrase` that takes as input the necessary information, 
 and returns a phrase.  For example, 
 
-```{r}
+```{r, eval = FALSE}
 make_phrase(num = 1, 
-            num_word = "one", 
+            num_word = "ten", 
             item = "lord", 
             verb = "a-leaping", 
             adjective = "", 
@@ -170,6 +134,7 @@ make_phrase <- function(num, num_word, item, verb, adjective, location) {
   item <- str_replace_na(item, "")
   adjective <- str_replace_na(adjective, "")
   location <- str_replace_na(location, "")
+  
   ## Step 2: Pluralize the gift if needed
   ## Items with numbers larger than 1 should be pluralized
   ## Single items starting with a vowel should have "an" in front
@@ -212,7 +177,12 @@ to create numbered days and then use those in your `pmap_chr()`!
 xmas <- xmas %>%
   mutate(
     Day.in.Words = as.character(english::as.english(Day)),
-    Full.Phrase = pmap_chr(list(Day, Day.in.Words, Gift.Item, Verb, Adjective, Location), 
+    Full.Phrase = pmap_chr(list(Day, 
+                                Day.in.Words, 
+                                Gift.Item, 
+                                Verb, 
+                                Adjective, 
+                                Location), 
                            make_phrase)
   )
 ```
@@ -231,46 +201,46 @@ Write a function called `sing_line` that takes as input:
 
 * The name of a column in the dataset that contains the phrases for each day.
 
-```{r mine}
+
+
+```{r sing_line}
 # Produces the string for one day of the song.
 # Arguments -- dataset -- A data frame containing information about gifts
 # Arguments -- line -- The number of the line for the day you want to sing about
 # Arguments -- phrase_col -- The variable name for the column in the dataset that contains the gift phrases
 # Return -- A string singing the line of the song with all gifts for the given day.
-
 sing_line <- function(dataset, line, phrase_col){
   
   # Step 1: Setup the intro line
   
   num_word <- english::ordinal(line)
-  
-  intro <- glue::glue("On the {num_word} day of Christmas, my true love sent to me, \n")
-  
+ 
+  intro <- glue::glue("On the {num_word} day of Christmas, my true love sent to me,")
   # Step 2: Sing the gift phrases
 
-    phrases <- dataset %>% 
-      filter(Day <= line) %>%
-      pull({{phrase_col}}) %>%
+   phrases <- dataset %>%
+      filter(Day <= line) %>% 
+      pull({{phrase_col}}) %>% 
       rev()
-    
-    #sing_phrases <- vector(mode = "character");
-    
-    #for (i in seq(from = line + 1, to = 1)) {
-     # sing_phrases <- str_c(phrases[i])
-    #}
-#english::ordinal()
-  ## put it together
-    
-  final_phrases <- paste(phrases, collapse =" \n ")
-    glue::glue("{intro} {final_phrases}")
-  final_line <- str_c(intro, final_phrases)
-  return(final_phrases)
-  }
 
-#for i in sequence()
+    if (str_detect(phrases[line], "one"))
+    {
+      phrases[line] <- str_remove(phrases[line], "one")
+    }
+    a <- paste(phrases[1:(line-1)], collapse = ",\n")
+    if (line > 1){
+     a <- str_c(a, phrases[line], sep = "\nand")
+      
+    }
+    return (glue("{intro}\n{a}"))
 
 
+}
 ```
+
+We learned about the rev() function from <https://stackoverflow.com/questions/13612967/how-to-reverse-a-string-in-r>
+
+We learned more about the paste() function from <https://stackoverflow.com/questions/2098368/concatenate-a-vector-of-strings-character>
 
 For example,
 
@@ -282,41 +252,6 @@ sing_line(dataset = xmas,
 
 ```
 
-```{r abdul}
-sing_line <- function(dataset, line, phrase_col){
-
-  # Step 1: Setup the intro line
-
-  num_word <- english::ordinal(line)
- 
-  intro <- glue::glue("On the {num_word} day of Christmas, my true love sent to me,")
-  # Step 2: Sing the gift phrases
-
-    phrases <- dataset %>%
-      filter(Day <= line) %>% 
-      pull({{phrase_col}}) %>% 
-      rev()
-    #print(phrases[line])
-    if (str_detect(phrases[line], "one"))
-    {
-      phrases[line] <- str_replace(phrases[line], "one", "a")
-    }
-    a<- #map_chr(1:line, glue::glue("{phrases},\n"))
-      paste(phrases[1:(line-1)], collapse = ",\n")
-    b <- str_c(a, phrases[line], sep = "\nand ")
-    return (glue("{intro}\n{b}"))
-
-}
-```
-
-We learned about the paste function from <https://www.journaldev.com/40396/paste-in-r>
-should return
-
-```
-On the second day of Christmas, my true love sent to me,
-two turtle doves 
-and a partridge in a pear tree.
-```
 
 *Hint:*  The `{{phrase_col}}` part, which I provided for you, lets you use 
 column names as arguments to a function.  Don't delete that line of code!
